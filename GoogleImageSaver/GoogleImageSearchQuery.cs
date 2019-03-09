@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using HtmlAgilityPack;
 
 namespace GoogleImageSaver
@@ -87,8 +88,10 @@ namespace GoogleImageSaver
 
             for (int curPage = 0; hadPreviousSearchResult && ((curPage * pageResultsCount) < DesiredResultsCount); ++curPage)
             {
+                /* just google image search query */
                 pageUrl = string.Format(@"https://www.google.com/search?q={0}&tbm=isch&start={1}", SearchQuery, curPage * pageResultsCount);
                 document = web.Load(pageUrl);
+                /* selecting all images from results table */
                 singlePageResult = document.DocumentNode.SelectNodes(@"//table[@class='images_table']//img")
                     .Select((node) => node.Attributes["src"].Value);
                 if (singlePageResult.Count() > 0)
@@ -106,7 +109,32 @@ namespace GoogleImageSaver
 
         public void SaveImages()
         {
-            throw new System.NotImplementedException();
+            if (imageUrls != null)
+            {
+                WebClient client = new WebClient();
+                List<Exception> exceptions = new List<Exception>();
+                
+                foreach (string src in imageUrls)
+                {
+                    try {
+                        /* image src link: https://encrypted-tbn0.gstatic.com/images?q=tbn:<probably hash value> */
+                        client.DownloadFile(src, SaveFolderPath + Path.PathSeparator + src.Split(':').Last());
+                    }
+                    catch (Exception e)
+                    {
+                        exceptions.Add(e);
+                    }
+                }
+
+                if (exceptions.Count > 0)
+                {
+                    throw new AggregateException(exceptions);
+                }
+            }
+            else
+            {
+                throw new InvalidOperationException(string.Format("You should call {0} method first", nameof(ProcessQuery)));
+            }
         }
 
         protected string searchQuery, saveFolderPath;
