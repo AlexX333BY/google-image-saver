@@ -68,7 +68,40 @@ namespace GoogleImageSaver
 
         public void ProcessQuery()
         {
-            throw new System.NotImplementedException();
+            if (SearchQuery == null)
+            {
+                throw new TypeInitializationException(nameof(GoogleImageSearchQuery), null);
+            }
+            imageUrls = new List<string>();
+
+            if (DesiredResultsCount == 0)
+            {
+                return;
+            }
+
+            string pageUrl;
+            bool hadPreviousSearchResult = true;
+            HtmlWeb web = new HtmlWeb();
+            HtmlDocument document;
+            IEnumerable<string> singlePageResult;
+
+            for (int curPage = 0; hadPreviousSearchResult && ((curPage * pageResultsCount) < DesiredResultsCount); ++curPage)
+            {
+                pageUrl = string.Format(@"https://www.google.com/search?q={0}&tbm=isch&start={1}", SearchQuery, curPage * pageResultsCount);
+                document = web.Load(pageUrl);
+                singlePageResult = document.DocumentNode.SelectNodes(@"//table[@class='images_table']//img")
+                    .Select((node) => node.Attributes["src"].Value);
+                if (singlePageResult.Count() > 0)
+                {
+                    hadPreviousSearchResult = true;
+                    imageUrls = imageUrls.Concat(singlePageResult);
+                }
+                else
+                {
+                    hadPreviousSearchResult = false;
+                }
+            }
+            imageUrls = imageUrls.Take(DesiredResultsCount);
         }
 
         public void SaveImages()
@@ -79,6 +112,7 @@ namespace GoogleImageSaver
         protected string searchQuery, saveFolderPath;
         protected int desiredResultsCount;
         protected IEnumerable<string> imageUrls;
+        protected const byte pageResultsCount = 20;
     }
 }
 
