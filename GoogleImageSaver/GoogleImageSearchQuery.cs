@@ -118,7 +118,7 @@ namespace GoogleImageSaver
                 {
                     try {
                         /* image src link: https://encrypted-tbn0.gstatic.com/images?q=tbn:<probably hash value> */
-                        client.DownloadFile(src, SaveFolderPath + Path.PathSeparator + src.Split(':').Last());
+                        client.DownloadFile(src, SaveFolderPath + Path.DirectorySeparatorChar + src.Split(':').Last());
                     }
                     catch (Exception e)
                     {
