@@ -93,8 +93,8 @@ namespace GoogleImageSaver
                 document = web.Load(pageUrl);
                 /* selecting all images from results table */
                 singlePageResult = document.DocumentNode.SelectNodes(@"//table[@class='images_table']//img")
-                    .Select((node) => node.Attributes["src"].Value);
-                if (singlePageResult.Count() > 0)
+                    ?.Select((node) => node.Attributes["src"].Value);
+                if ((singlePageResult != null) && (singlePageResult.Count() > 0))
                 {
                     hadPreviousSearchResult = true;
                     imageUrls = imageUrls.Concat(singlePageResult);
